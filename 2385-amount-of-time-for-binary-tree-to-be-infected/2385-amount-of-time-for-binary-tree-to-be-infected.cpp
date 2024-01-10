@@ -1,48 +1,28 @@
 class Solution {
-private:
-    static int height(TreeNode* n)
-    {
-        if (!n)
-            return 0;
-        return 1 + max(height(n->right), height(n->left));
-    }
-    static pair<bool, int> traverse(TreeNode* n, int targetVal, int& targetSubtreeHeight, int& maxIndirect)
-    {
-        if (!n)
-            return {false, 0};
-        else if (n->val == targetVal)
-        {
-            targetSubtreeHeight = max(height(n->left), height(n->right));
-            return {true, 0};
-        }
-        else
-        {
-            auto l = traverse(n->left, targetVal, targetSubtreeHeight, maxIndirect);
-            auto r = traverse(n->right, targetVal, targetSubtreeHeight, maxIndirect);
-            if (l.first)
-            {
-                // target node found in the left subtree
-                maxIndirect = max(maxIndirect, 1 + l.second + r.second);
-                return {true, 1 + l.second};
-            }
-            else if (r.first)
-            {
-                maxIndirect = max(maxIndirect, 1 + l.second + r.second);
-                // target node found in the right subtree
-                return {true, 1 + r.second};
-            }
-            else
-            {
-                // there is no target in the current tree
-                return {false, 1 + max(l.second, r.second)};
-            }
-        }
-    }
 public:
-    int amountOfTime(TreeNode* root, int start) 
-    {
-        int targetLeafLen = 0, maxIndirect = 0;
-        traverse(root, start, targetLeafLen, maxIndirect);
-        return max(maxIndirect, targetLeafLen);
+    int maxi = INT_MIN;
+
+    int calculateInfectionTime(TreeNode* root, int start, bool isStartNode) {
+        if (root == nullptr) return 0;
+
+        if (root->val == start && isStartNode) {
+            maxi = max(maxi, calculateInfectionTime(root, start, false) - 1);
+            return -1;
+        }
+
+        int leftHeight = calculateInfectionTime(root->left, start, isStartNode);
+        int rightHeight = calculateInfectionTime(root->right, start, isStartNode);
+
+        if (leftHeight < 0 || rightHeight < 0) {
+            maxi = max(maxi, abs(leftHeight) + abs(rightHeight));
+            return min(leftHeight, rightHeight) - 1;
+        }
+
+        return max(leftHeight, rightHeight) + 1;
+    }
+
+    int amountOfTime(TreeNode* root, int start) {
+        int height = calculateInfectionTime(root, start, true);
+        return maxi;
     }
 };
